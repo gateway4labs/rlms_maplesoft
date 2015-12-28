@@ -105,9 +105,8 @@ class RLMS(BaseRLMS):
         return response
 
     def load_widget(self, reservation_id, widget_name, **kwargs):
-        url = 'http://maplecloud.maplesoft.com/maplenet/worksheets/maplecloud/view/{0}.mw'.format(reservation_id)
         return {
-            'url' : url
+            'url' : reservation_id
         }
 
     def list_widgets(self, laboratory_id, **kwargs):
