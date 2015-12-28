@@ -16,7 +16,7 @@ classifiers=[
 cp_license="MIT"
 install_requires=["beautifulsoup4"]
 
-setup(name='g4l_rlms_phet',
+setup(name='g4l_rlms_maplesoft',
       version='0.1',
       description="MapleSoft plug-in in the gateway4labs project",
       classifiers=classifiers,
