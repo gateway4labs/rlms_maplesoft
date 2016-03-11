@@ -70,7 +70,10 @@ def retrieve_labs():
     index_html = MAPLESOFT.cached_session.get('http://www.maplesoft.com/products/mobiusproject/studentapps/').text
     soup = BeautifulSoup(index_html, 'lxml')
     laboratories = []
-    for lab in soup.findAll(class_="plainlink"):
+    for lab in soup.findAll("a"):
+        if 'application.jsp?appId=' not in (lab.get('href', '') or ''):
+            continue
+
         link = lab['href']
         if not 'appId=' in link:
             continue
@@ -131,17 +134,24 @@ DEBUG = MAPLESOFT.is_debug() or False
 DEBUG_LOW_LEVEL = DEBUG and True
 
 def main():
-    rlms = RLMS("{}")
-    t0 = time.time()
-    laboratories = rlms.get_laboratories()
-    tf = time.time()
-    print len(laboratories), (tf - t0), "seconds"
-    for lab in laboratories[:5]:
-        for lang in ('en', 'pt'):
-            t0 = time.time()
-            print rlms.reserve(lab.laboratory_id, 'tester', 'foo', '', '', '', '', locale = lang)
-            tf = time.time()
-            print tf - t0, "seconds"
+    from labmanager.rlms.caches import CacheDisabler
+    with CacheDisabler():
+        rlms = RLMS("{}")
+        t0 = time.time()
+        laboratories = rlms.get_laboratories()
+        tf = time.time()
+        print 
+        msg = "%s laboratories in %.2f seconds" % (len(laboratories), (tf - t0))
+        print msg
+        print "*" * len(msg)
+        print 
+        for lab in laboratories[:5]:
+            for lang in ('en', 'pt'):
+                print "Reserving:", lab, "in",lang
+                t0 = time.time()
+                print rlms.reserve(lab.laboratory_id, 'tester', 'foo', '', '', '', '', locale = lang)
+                tf = time.time()
+                print tf - t0, "seconds"
     
 
 if __name__ == '__main__':
