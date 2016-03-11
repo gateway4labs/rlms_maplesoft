@@ -71,6 +71,9 @@ def retrieve_labs():
     soup = BeautifulSoup(index_html, 'lxml')
     laboratories = []
     for lab in soup.findAll("a"):
+        if not lab.text:
+            continue 
+
         if 'application.jsp?appId=' not in (lab.get('href', '') or ''):
             continue
 
