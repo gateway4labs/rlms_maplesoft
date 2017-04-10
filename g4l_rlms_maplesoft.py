@@ -97,7 +97,24 @@ class RLMS(BaseRLMS):
         return Versions.VERSION_1
 
     def get_capabilities(self):
-        return [ Capabilities.WIDGET ]
+        return [ Capabilities.WIDGET, Capabilities.URL_FINDER ]
+
+    def get_base_urls(self):
+        return [ 'http://maplecloud.maplesoft.com/' ]
+
+    def get_lab_by_url(self, url):
+        if url.startswith('http://maplecloud.maplesoft.com/maplenet/worksheets/maplecloud/view/'):
+            identifier = url.split('/view/')[1].split('.')[0]
+        elif url.startswith('http://maplecloud.maplesoft.com/application.jsp?appId='):
+            identifier = url.split('appId=')[1].split('&')[0]
+        else:
+            return None
+
+        for lab in retrieve_labs():
+            if unicode(lab.laboratory_id) == identifier:
+                return lab
+
+        return None
 
     def get_laboratories(self, **kwargs):
         return retrieve_labs()
