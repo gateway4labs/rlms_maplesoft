@@ -97,7 +97,7 @@ class RLMS(BaseRLMS):
         return Versions.VERSION_1
 
     def get_capabilities(self):
-        return [ Capabilities.WIDGET, Capabilities.URL_FINDER ]
+        return [ Capabilities.WIDGET, Capabilities.URL_FINDER, Capabilities.CHECK_URLS ]
 
     def get_base_urls(self):
         return [ 'http://maplecloud.maplesoft.com/' ]
@@ -115,6 +115,10 @@ class RLMS(BaseRLMS):
                 return lab
 
         return None
+
+    def get_check_urls(self, laboratory_id):
+        url = 'http://maplecloud.maplesoft.com/maplenet/worksheets/maplecloud/view/{0}.mw'.format(laboratory_id)
+        return [ url ]
 
     def get_laboratories(self, **kwargs):
         return retrieve_labs()
