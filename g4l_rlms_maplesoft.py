@@ -16,10 +16,11 @@ import traceback
 
 from bs4 import BeautifulSoup
 
+from flask import Blueprint, url_for
 from flask.ext.wtf import TextField, PasswordField, Required, URL, ValidationError
 
 from labmanager.forms import AddForm
-from labmanager.rlms import register, Laboratory, CacheDisabler
+from labmanager.rlms import register, Laboratory, CacheDisabler, register_blueprint
 from labmanager.rlms.base import BaseRLMS, BaseFormCreator, Capabilities, Versions
 
     
@@ -100,10 +101,12 @@ class RLMS(BaseRLMS):
         return [ Capabilities.WIDGET, Capabilities.URL_FINDER, Capabilities.CHECK_URLS ]
 
     def get_base_urls(self):
-        return [ 'http://maplecloud.maplesoft.com/' ]
+        return [ 'http://maplecloud.maplesoft.com/', 'https://maple.cloud/#doc=' ]
 
     def get_lab_by_url(self, url):
-        if url.startswith('http://maplecloud.maplesoft.com/maplenet/worksheets/maplecloud/view/'):
+        if url.startswith('https://maple.cloud/#doc='):
+            identifier = url.split('=')[1].split('&')[0].split(';')[0]
+        elif url.startswith('http://maplecloud.maplesoft.com/maplenet/worksheets/maplecloud/view/'):
             identifier = url.split('/view/')[1].split('.')[0]
         elif url.startswith('http://maplecloud.maplesoft.com/application.jsp?appId='):
             identifier = url.split('appId=')[1].split('&')[0]
@@ -117,14 +120,14 @@ class RLMS(BaseRLMS):
         return None
 
     def get_check_urls(self, laboratory_id):
-        url = 'http://maplecloud.maplesoft.com/maplenet/worksheets/maplecloud/view/{0}.mw'.format(laboratory_id)
+        url = 'https://maple.cloud/downloadDocument?id={0}&version=&cloudToken='.format(laboratory_id)
         return [ url ]
 
     def get_laboratories(self, **kwargs):
         return retrieve_labs()
 
     def reserve(self, laboratory_id, username, institution, general_configuration_str, particular_configurations, request_payload, user_properties, *args, **kwargs):
-        url = 'http://maplecloud.maplesoft.com/maplenet/worksheets/maplecloud/view/{0}.mw'.format(laboratory_id)
+        url = url_for('maplesoft.maple_get', identifier=laboratory_id, _external=True) 
         response = {
             'reservation_id' : url,
             'load_url' : url
@@ -153,6 +156,25 @@ def populate_cache():
 
 MAPLESOFT = register("MapleSoft", ['1.0'], __name__)
 MAPLESOFT.add_global_periodic_task('Populating cache', populate_cache, hours = 23)
+
+maplesoft_blueprint = Blueprint('maplesoft', __name__)
+
+@maplesoft_blueprint.route('/id/<identifier>')
+def maple_get(identifier):
+    return """<html>
+<body onload='submitForm()'>
+<form id='maple-form' action='https://maplenet.cloud/maplenet/worksheet/open' method='POST'>
+    <input type='hidden' name='documentUrl' value='https://maple.cloud/downloadDocument?id=%(IDENTIFIER)s&version=&cloudToken='>
+</form>
+<script>
+    function submitForm() {
+        document.getElementById('maple-form').submit();
+    }
+</script>
+</body>
+</html>""" % { 'IDENTIFIER': identifier }
+
+register_blueprint(maplesoft_blueprint, url='/maplesoft')
 
 DEBUG = MAPLESOFT.is_debug() or False
 DEBUG_LOW_LEVEL = DEBUG and True
