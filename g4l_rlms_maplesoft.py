@@ -155,7 +155,7 @@ def populate_cache():
         sys.stderr.flush()
 
 MAPLESOFT = register("MapleSoft", ['1.0'], __name__)
-MAPLESOFT.add_global_periodic_task('Populating cache', populate_cache, hours = 23)
+MAPLESOFT.add_global_periodic_task('Populating cache', populate_cache, hours = 17)
 
 maplesoft_blueprint = Blueprint('maplesoft', __name__)
 
